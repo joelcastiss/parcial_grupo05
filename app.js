@@ -68,6 +68,7 @@ function isPastOrToday(dateStr) {
   return dateStr <= today();
 }
 
+
 // =====================
 // VALIDATION HELPERS
 // =====================
