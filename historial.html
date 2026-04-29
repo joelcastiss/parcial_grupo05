@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clínica Salud+ — Historial Clínico</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .hist-layout { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; align-items: start; }
+    @media (max-width: 960px) { .hist-layout { grid-template-columns: 1fr; } }
+    .pac-item {
+      padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+      cursor: pointer; border-bottom: 1px solid var(--gray-100); transition: var(--transition);
+    }
+    .pac-item:hover { background: var(--gray-50); }
+    .pac-item.selected { background: #EFF6FF; border-left: 3px solid var(--blue); }
+    .hist-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--blue-mid); color: white;
+      width: 20px; height: 20px; border-radius: 50%;
+      font-size: 0.65rem; font-weight: 700; flex-shrink: 0;
+    }
+    .hist-record {
+      background: var(--white); border: 1.5px solid var(--gray-200); border-radius: var(--radius-lg);
+      overflow: hidden; margin-bottom: 1.25rem; transition: var(--transition);
+    }
+    .hist-record:hover { box-shadow: var(--shadow); }
+    .hist-record-header {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: white; padding: 1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .hist-record-header .date-badge {
+      background: rgba(255,255,255,0.15); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
+    }
+    .hist-section { padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--gray-100); }
+    .hist-section:last-child { border-bottom: none; }
+    .hist-section-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--gray-400); margin-bottom: 4px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .hist-section-value { font-size: 0.875rem; color: var(--gray-700); line-height: 1.6; }
+    .med-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF;
+      padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin: 2px;
+    }
+    .allergy-warning {
+      background: var(--red-light); border: 1.5px solid #FCA5A5; border-radius: var(--radius);
+      padding: 10px 14px; margin-bottom: 1rem; font-size: 0.82rem; color: #991B1B;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pac-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      color: white;
+    }
+    .pac-avatar.f { background: linear-gradient(135deg, #EC4899, #9333EA); }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="brand-icon">⚕</div>
+    <div>
+      <span class="brand-name">Clínica Salud+</span>
+      <span class="brand-sub">Sistema de Gestión</span>
+    </div>
+  </a>
+  <ul class="navbar-nav">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> <span>Inicio</span></a></li>
+    <li><a href="pacientes.html"><span class="nav-icon">👤</span> <span>Pacientes</span></a></li>
+    <li><a href="citas.html"><span class="nav-icon">📅</span> <span>Citas</span></a></li>
+    <li><a href="historial.html"><span class="nav-icon">📋</span> <span>Historial</span></a></li>
+  </ul>
+</nav>
+
+<div class="page-wrapper">
+  <div class="page-header flex-between">
+    <div>
+      <h1 class="page-title">📋 Historial Clínico</h1>
+      <p class="page-subtitle">Registra y consulta el historial médico de los pacientes</p>
+    </div>
+    <button class="btn btn-primary" onclick="openNewHistorial()">+ Registrar consulta</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" id="hist-stats"></div>
+
+  <div class="hist-layout">
+
+    <!-- PANEL IZQUIERDO: BÚSQUEDA Y LISTA PACIENTES -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🔍 Buscar paciente</span>
+        </div>
+        <div class="card-body" style="padding:1rem">
+          <div class="search-bar mb-4">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-hist-pac" placeholder="Nombre o DNI..." oninput="renderPacientesList()" />
+          </div>
+          <div id="hist-pac-list" style="max-height:460px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL DERECHO: HISTORIAL DEL PACIENTE -->
+    <div id="hist-right">
+      <div class="card">
+        <div class="card-body">
+          <div class="empty-state" style="padding:4rem 1rem">
+            <span class="empty-icon">📋</span>
+            <p>Selecciona un paciente de la lista<br>para ver su historial clínico.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL REGISTRAR CONSULTA -->
+<div class="modal-overlay hidden" id="modal-historial">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-hist-title">Registrar Consulta Médica</span>
+      <button class="modal-close" onclick="closeModal('modal-historial')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-historial" onsubmit="return false">
+
+        <!-- SELECCIÓN DESDE CITA -->
+        <div class="form-group" style="margin-bottom:1.25rem">
+          <label for="hist-cita">Seleccionar cita atendida <span class="required">*</span></label>
+          <select id="hist-cita" onchange="onCitaSelected()">
+            <option value="">-- Elige una cita atendida --</option>
+          </select>
+          <span class="field-error" id="err-hist-cita"></span>
+          <span class="text-xs text-muted">Solo se muestran citas con estado "Atendida" sin historial previo</span>
+        </div>
+
+        <!-- INFO AUTO-COMPLETADA -->
+        <div id="cita-info-preview" class="hidden" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;font-size:0.82rem">
+            <div><div class="detail-label">Paciente</div><div class="detail-value" id="prev-pac">—</div></div>
+            <div><div class="detail-label">Médico</div><div class="detail-value" id="prev-med">—</div></div>
+            <div><div class="detail-label">Especialidad</div><div class="detail-value" id="prev-esp">—</div></div>
+          </div>
+        </div>
+
+        <div class="form-grid form-grid-2">
+
+          <!-- FECHA ATENCIÓN -->
+          <div class="form-group">
+            <label for="hist-fecha">Fecha de atención <span class="required">*</span></label>
+            <input type="date" id="hist-fecha" />
+            <span class="field-error" id="err-hist-fecha"></span>
+          </div>
+
+          <!-- PRÓXIMA CITA -->
+          <div class="form-group">
+            <label for="hist-prox-cita">Próxima cita recomendada</label>
+            <input type="date" id="hist-prox-cita" />
+            <span class="field-error" id="err-hist-prox"></span>
+          </div>
+
+          <!-- SÍNTOMAS -->
+          <div class="form-group full-width">
+            <label for="hist-sintomas">Síntomas reportados <span class="required">*</span></label>
+            <textarea id="hist-sintomas" placeholder="Describe los síntomas que reportó el paciente en la consulta..." style="min-height:80px"></textarea>
+            <div class="flex-between">
+              <span class="field-error" id="err-hist-sint"></span>
+              <span class="char-counter" id="cc-sint">0/300</span>
+            </div>
+          </div>
+
+          <!-- DIAGNÓSTICO -->
+          <div class="form-group full-width">
+            <label for="hist-diagnostico">Diagnóstico <span class="required">*</span></label>
+            <textarea id="hist-diagnostico" placeholder="Resultado médico de la consulta. Describe el diagnóstico de forma clara y completa..." style="min-height:80px"></textarea>
+            <div class="flex-between">
+              <span class="field-error" id="err-hist-diag"></span>
+              <span class="char-counter" id="cc-diag">0/300</span>
+            </div>
+          </div>
+
+          <!-- TRATAMIENTO -->
+          <div class="form-group full-width">
+            <label for="hist-tratamiento">Tratamiento e indicaciones <span class="required">*</span></label>
+            <textarea id="hist-tratamiento" placeholder="Ej: Reposo por 2 días, hidratación abundante y medicamento cada 8 horas..." style="min-height:80px"></textarea>
+            <div class="flex-between">
+              <span class="field-error" id="err-hist-trat"></span>
+              <span class="char-counter" id="cc-trat">0/400</span>
+            </div>
+          </div>
+
+          <!-- OBSERVACIONES -->
+          <div class="form-group full-width">
+            <label for="hist-obs">Observaciones adicionales</label>
+            <textarea id="hist-obs" placeholder="Comentarios adicionales del médico (opcional)..." style="min-height:60px"></textarea>
+            <div class="flex-between">
+              <span class="field-error"></span>
+              <span class="char-counter" id="cc-obs">0/300</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MEDICAMENTOS -->
+        <div style="margin-top:1rem">
+          <div class="flex-between mb-4">
+            <label style="font-size:0.85rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:0.04em">💊 Medicamentos recetados <span style="font-size:0.7rem;color:var(--gray-400);text-transform:none;font-weight:400">(opcional)</span></label>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addMed()">+ Agregar medicamento</button>
+          </div>
+          <div id="meds-container"></div>
+        </div>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-historial')">Cancelar</button>
+      <button class="btn btn-primary btn-lg" onclick="saveHistorial()">💾 Guardar historial</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER HISTORIAL DETALLE -->
+<div class="modal-overlay hidden" id="modal-hist-detail">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <span class="modal-title">📋 Detalle de consulta</span>
+      <button class="modal-close" onclick="closeModal('modal-hist-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="hist-detail-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-hist-detail')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="app.js"></script>
+<script>
+  let selectedPacId = null;
+  let medCount = 0;
+
+  // =====================
+  // STATS
+  // =====================
+  function renderStats() {
+    const hists = Storage.get(KEYS.HISTORIAL);
+    const pacs = Storage.get(KEYS.PACIENTES);
+    const citasAtendidas = Storage.get(KEYS.CITAS).filter(c => c.estado === 'atendida');
+    const sinHistorial = citasAtendidas.filter(c => !hists.find(h => h.citaId === c.id)).length;
+
+    document.getElementById('hist-stats').innerHTML = `
+      <div class="stat-card"><div class="stat-icon teal">📋</div><div class="stat-info"><div class="stat-value">${hists.length}</div><div class="stat-label">Historiales</div></div></div>
+      <div class="stat-card"><div class="stat-icon blue">👥</div><div class="stat-info"><div class="stat-value">${pacs.length}</div><div class="stat-label">Pacientes</div></div></div>
+      <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-value">${citasAtendidas.length}</div><div class="stat-label">Citas atendidas</div></div></div>
+      <div class="stat-card"><div class="stat-icon amber">⏳</div><div class="stat-info"><div class="stat-value">${sinHistorial}</div><div class="stat-label">Sin historial</div></div></div>
+    `;
+  }
+
+  // =====================
+  // LISTA PACIENTES (sidebar)
+  // =====================
+  function renderPacientesList() {
+    const q = (document.getElementById('search-hist-pac').value || '').toLowerCase();
+    const pacs = Storage.get(KEYS.PACIENTES).filter(p => {
+      return `${p.nombres} ${p.apellidos} ${p.dni}`.toLowerCase().includes(q);
+    });
+    const hists = Storage.get(KEYS.HISTORIAL);
+
+    if (pacs.length === 0) {
+      document.getElementById('hist-pac-list').innerHTML = '<div class="empty-state"><span class="empty-icon">🔍</span><p>No se encontraron pacientes</p></div>';
+      return;
+    }
+
+    document.getElementById('hist-pac-list').innerHTML = pacs.map(p => {
+      const count = hists.filter(h => h.pacienteId === p.id).length;
+      return `
+        <div class="pac-item ${selectedPacId === p.id ? 'selected' : ''}" onclick="selectPacHistorial('${p.id}')">
+          <div class="pac-avatar ${p.genero === 'F' ? 'f' : ''}">${(p.nombres[0]+p.apellidos[0]).toUpperCase()}</div>
+          <div style="flex:1">
+            <div style="font-size:0.85rem;font-weight:600;color:var(--gray-800)">${p.nombres} ${p.apellidos}</div>
+            <div style="font-size:0.72rem;color:var(--gray-500)">DNI: ${p.dni}</div>
+          </div>
+          ${count > 0 ? `<span class="hist-count">${count}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // =====================
+  // SELECT PACIENTE → MOSTRAR HISTORIAL
+  // =====================
+  function selectPacHistorial(pacId) {
+    selectedPacId = pacId;
+    renderPacientesList();
+    const pac = Storage.getOne(KEYS.PACIENTES, pacId);
+    if (!pac) return;
+
+    const hists = Storage.get(KEYS.HISTORIAL).filter(h => h.pacienteId === pacId);
+    hists.sort((a,b) => b.fechaAtencion.localeCompare(a.fechaAtencion));
+
+    const alergias = pac.alergias
+      ? `<div class="allergy-warning">⚠ <strong>Alergias:</strong> ${pac.alergias}</div>` : '';
+
+    let contenido = '';
+    if (hists.length === 0) {
+      contenido = '<div class="empty-state"><span class="empty-icon">📋</span><p>Este paciente no tiene historial clínico registrado.</p></div>';
+    } else {
+      contenido = hists.map(h => renderHistorialCard(h, pac)).join('');
+    }
+
+    document.getElementById('hist-right').innerHTML = `
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-header" style="background:linear-gradient(135deg,var(--navy),var(--teal));color:white;border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="pac-avatar ${pac.genero==='F'?'f':''}" style="width:50px;height:50px;font-size:1.1rem">${(pac.nombres[0]+pac.apellidos[0]).toUpperCase()}</div>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600">${pac.nombres} ${pac.apellidos}</div>
+              <div style="font-size:0.78rem;opacity:0.75">DNI: ${pac.dni} · ${pac.tipoSangre} · ${calcEdad(pac.fechaNacimiento)} años</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <span class="badge" style="background:rgba(255,255,255,0.15);color:white">${hists.length} consulta(s)</span>
+            <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.3)" onclick="openNewHistorial('${pac.id}')">+ Nueva</button>
+          </div>
+        </div>
+        <div class="card-body">
+          ${alergias}
+          <div id="pac-hist-timeline">${contenido}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function calcEdad(fnac) {
+    if (!fnac) return '—';
+    return Math.floor((new Date() - new Date(fnac)) / (365.25*24*3600*1000));
+  }
+
+  // =====================
+  // RENDER HISTORIAL CARD
+  // =====================
+  function renderHistorialCard(h, pac) {
+    const meds = (h.medicamentos || []).filter(m => m.nombre);
+    const medHtml = meds.length > 0
+      ? meds.map(m => `<span class="med-pill">💊 ${m.nombre}${m.dosis ? ' · '+m.dosis : ''}${m.frecuencia ? ' · '+m.frecuencia : ''}${m.duracion ? ' · '+m.duracion : ''}</span>`).join('')
+      : '<span class="text-muted text-sm">No se recetaron medicamentos</span>';
+
+    return `
+      <div class="hist-record">
+        <div class="hist-record-header">
+          <div>
+            <div style="font-size:0.75rem;opacity:0.7;margin-bottom:2px">${h.medico} · ${h.especialidad}</div>
+            <div style="font-weight:600;font-size:0.95rem">📋 Consulta médica</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="date-badge">📅 ${formatDate(h.fechaAtencion)}</span>
+            <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.3)" onclick="viewDetail('${h.id}')">Ver más</button>
+            <button class="btn btn-sm" style="background:rgba(220,38,38,0.3);color:white;border-color:rgba(220,38,38,0.5)" onclick="deleteHistorial('${h.id}')">🗑</button>
+          </div>
+        </div>
+        <div class="hist-section">
+          <div class="hist-section-label">🤒 Síntomas reportados</div>
+          <div class="hist-section-value">${h.sintomas}</div>
+        </div>
+        <div class="hist-section">
+          <div class="hist-section-label">🔬 Diagnóstico</div>
+          <div class="hist-section-value">${h.diagnostico}</div>
+        </div>
+        <div class="hist-section">
+          <div class="hist-section-label">💉 Tratamiento e indicaciones</div>
+          <div class="hist-section-value">${h.tratamiento}</div>
+        </div>
+        <div class="hist-section">
+          <div class="hist-section-label">💊 Medicamentos</div>
+          <div>${medHtml}</div>
+        </div>
+        ${h.observaciones ? `<div class="hist-section"><div class="hist-section-label">📝 Observaciones</div><div class="hist-section-value">${h.observaciones}</div></div>` : ''}
+        ${h.proximaCita ? `<div class="hist-section"><div class="hist-section-label">📆 Próxima cita sugerida</div><div class="hist-section-value" style="color:var(--green);font-weight:600">📅 ${formatDate(h.proximaCita)}</div></div>` : ''}
+      </div>
+    `;
+  }
+
+  // =====================
+  // OPEN NEW HISTORIAL
+  // =====================
+  function openNewHistorial(preselectedPacId = null) {
+    document.getElementById('modal-hist-title').textContent = 'Registrar Consulta Médica';
+    document.getElementById('form-historial').reset();
+    document.getElementById('hist-fecha').value = today();
+    clearAllErrors('form-historial');
+    document.getElementById('cita-info-preview').classList.add('hidden');
+    document.getElementById('meds-container').innerHTML = '';
+    medCount = 0;
+    populateCitasSelect(preselectedPacId);
+    openModal('modal-historial');
+    setupCharCounter('hist-sintomas', 'cc-sint', 300);
+    setupCharCounter('hist-diagnostico', 'cc-diag', 300);
+    setupCharCounter('hist-tratamiento', 'cc-trat', 400);
+    setupCharCounter('hist-obs', 'cc-obs', 300);
+  }
+
+  function populateCitasSelect(preselectedPacId = null) {
+    const citas = Storage.get(KEYS.CITAS).filter(c => c.estado === 'atendida');
+    const hists = Storage.get(KEYS.HISTORIAL);
+    // Exclude already having historial
+    const disponibles = citas.filter(c => !hists.find(h => h.citaId === c.id));
+    // Filter by patient if preselected
+    const filtered = preselectedPacId ? disponibles.filter(c => c.pacienteId === preselectedPacId) : disponibles;
+
+    const sel = document.getElementById('hist-cita');
+    if (filtered.length === 0) {
+      sel.innerHTML = '<option value="">No hay citas atendidas disponibles</option>';
+    } else {
+      sel.innerHTML = '<option value="">-- Elige una cita atendida --</option>' +
+        filtered.map(c => `<option value="${c.id}">${formatDate(c.fecha)} ${c.hora} — ${c.pacienteNombre} (DNI: ${c.pacienteDni}) — ${c.medico}</option>`).join('');
+    }
+  }
+
+  function onCitaSelected() {
+    const citaId = document.getElementById('hist-cita').value;
+    const preview = document.getElementById('cita-info-preview');
+    if (!citaId) { preview.classList.add('hidden'); return; }
+    const cita = Storage.getOne(KEYS.CITAS, citaId);
+    if (!cita) return;
+    document.getElementById('prev-pac').textContent = cita.pacienteNombre;
+    document.getElementById('prev-med').textContent = cita.medico;
+    document.getElementById('prev-esp').textContent = cita.especialidad;
+    document.getElementById('hist-fecha').value = cita.fecha;
+    preview.classList.remove('hidden');
+    clearFieldError('hist-cita');
+  }
+
+  // =====================
+  // ADD MEDICAMENTO
+  // =====================
+  function addMed() {
+    medCount++;
+    const id = medCount;
+    const div = document.createElement('div');
+    div.className = 'med-item';
+    div.id = `med-${id}`;
+    div.innerHTML = `
+      <button type="button" class="med-remove" onclick="removeMed(${id})">✕</button>
+      <div style="font-size:0.75rem;font-weight:700;color:var(--blue);margin-bottom:8px">💊 Medicamento #${id}</div>
+      <div class="form-grid form-grid-2" style="gap:0.75rem">
+        <div class="form-group">
+          <label for="med-nom-${id}" style="font-size:0.72rem">Nombre <span class="required">*</span></label>
+          <input type="text" id="med-nom-${id}" placeholder="Ej: Paracetamol 500mg" />
+          <span class="field-error" id="err-med-nom-${id}"></span>
+        </div>
+        <div class="form-group">
+          <label for="med-dos-${id}" style="font-size:0.72rem">Dosis</label>
+          <input type="text" id="med-dos-${id}" placeholder="Ej: 1 tableta, 500mg" />
+        </div>
+        <div class="form-group">
+          <label for="med-frec-${id}" style="font-size:0.72rem">Frecuencia</label>
+          <input type="text" id="med-frec-${id}" placeholder="Ej: Cada 8 horas" />
+          <span class="field-error" id="err-med-frec-${id}"></span>
+        </div>
+        <div class="form-group">
+          <label for="med-dur-${id}" style="font-size:0.72rem">Duración</label>
+          <input type="text" id="med-dur-${id}" placeholder="Ej: 5 días" />
+        </div>
+      </div>
+    `;
+    document.getElementById('meds-container').appendChild(div);
+  }
+
+  function removeMed(id) {
+    const el = document.getElementById(`med-${id}`);
+    if (el) el.remove();
+  }
+
+  // =====================
+  // SAVE HISTORIAL
+  // =====================
+  function saveHistorial() {
+    clearAllErrors('form-historial');
+    let valid = true;
+
+    const citaId = document.getElementById('hist-cita').value;
+    const fecha = document.getElementById('hist-fecha').value;
+    const sintomas = document.getElementById('hist-sintomas').value.trim();
+    const diag = document.getElementById('hist-diagnostico').value.trim();
+    const trat = document.getElementById('hist-tratamiento').value.trim();
+    const obs = document.getElementById('hist-obs').value.trim();
+    const proxCita = document.getElementById('hist-prox-cita').value;
+
+    // Validaciones
+    if (!citaId) { showFieldError('hist-cita', 'Debes seleccionar una cita atendida'); valid = false; }
+    else {
+      const cita = Storage.getOne(KEYS.CITAS, citaId);
+      if (!cita || cita.estado !== 'atendida') { showFieldError('hist-cita', 'Solo se puede registrar historial de citas atendidas'); valid = false; }
+      else clearFieldError('hist-cita');
+    }
+
+    if (!fecha) { showFieldError('hist-fecha', 'La fecha es obligatoria'); valid = false; }
+    else if (Validators.isFuture(fecha)) { showFieldError('hist-fecha', 'La fecha de atención no puede ser futura'); valid = false; }
+    else clearFieldError('hist-fecha');
+
+    if (!sintomas) { showFieldError('hist-sintomas', 'Los síntomas son obligatorios'); valid = false; }
+    else if (!Validators.minLength(sintomas, 10)) { showFieldError('hist-sintomas', 'Mínimo 10 caracteres'); valid = false; }
+    else if (!Validators.maxLength(sintomas, 300)) { showFieldError('hist-sintomas', 'Máximo 300 caracteres'); valid = false; }
+    else clearFieldError('hist-sintomas');
+
+    if (!diag) { showFieldError('hist-diagnostico', 'El diagnóstico es obligatorio'); valid = false; }
+    else if (!Validators.minLength(diag, 10)) { showFieldError('hist-diagnostico', 'Mínimo 10 caracteres'); valid = false; }
+    else if (!Validators.maxLength(diag, 300)) { showFieldError('hist-diagnostico', 'Máximo 300 caracteres'); valid = false; }
+    else if (!Validators.notTooShort(diag)) { showFieldError('hist-diagnostico', 'El diagnóstico debe ser descriptivo (no usar solo "bien", "mal", etc.)'); valid = false; }
+    else clearFieldError('hist-diagnostico');
+
+    if (!trat) { showFieldError('hist-tratamiento', 'El tratamiento es obligatorio'); valid = false; }
+    else if (!Validators.minLength(trat, 10)) { showFieldError('hist-tratamiento', 'Mínimo 10 caracteres'); valid = false; }
+    else if (!Validators.maxLength(trat, 400)) { showFieldError('hist-tratamiento', 'Máximo 400 caracteres'); valid = false; }
+    else clearFieldError('hist-tratamiento');
+
+    if (obs && !Validators.maxLength(obs, 300)) { showFieldError('hist-obs', 'Máximo 300 caracteres'); valid = false; }
+
+    if (proxCita && !Validators.isFuture(proxCita)) {
+      showFieldError('hist-prox-cita', 'La próxima cita debe ser una fecha futura');
+      valid = false;
+    }
+
+    // Validar medicamentos
+    const meds = [];
+    let medValid = true;
+    document.querySelectorAll('[id^="med-nom-"]').forEach(input => {
+      const n = input.id.replace('med-nom-', '');
+      const nom = input.value.trim();
+      const dos = (document.getElementById(`med-dos-${n}`) || {}).value?.trim() || '';
+      const frec = (document.getElementById(`med-frec-${n}`) || {}).value?.trim() || '';
+      const dur = (document.getElementById(`med-dur-${n}`) || {}).value?.trim() || '';
+
+      if (!nom) {
+        showFieldError(`med-nom-${n}`, 'El nombre del medicamento es obligatorio');
+        medValid = false; valid = false;
+      } else {
+        meds.push({ nombre: nom, dosis: dos, frecuencia: frec, duracion: dur });
+      }
+
+      if (frec && frec.length < 5) {
+        const errEl = document.getElementById(`err-med-frec-${n}`);
+        if (errEl) errEl.innerHTML = '⚠ La frecuencia debe ser más descriptiva (ej: "Cada 8 horas")';
+        valid = false;
+      }
+    });
+
+    if (!valid) { showToast('Corrige los errores antes de guardar', 'error'); return; }
+
+    const cita = Storage.getOne(KEYS.CITAS, citaId);
+    const historial = {
+      id: generateId('HST'),
+      citaId,
+      pacienteId: cita.pacienteId,
+      pacienteNombre: cita.pacienteNombre,
+      pacienteDni: cita.pacienteDni,
+      medico: cita.medico,
+      especialidad: cita.especialidad,
+      fechaAtencion: fecha,
+      sintomas, diagnostico: diag, tratamiento: trat,
+      medicamentos: meds,
+      observaciones: obs,
+      proximaCita: proxCita || null,
+      fechaRegistro: today()
+    };
+
+    Storage.save(KEYS.HISTORIAL, historial);
+    closeModal('modal-historial');
+    showToast('✓ Historial clínico registrado exitosamente', 'success');
+    renderStats();
+    renderPacientesList();
+    if (selectedPacId) selectPacHistorial(selectedPacId);
+    else if (cita.pacienteId) selectPacHistorial(cita.pacienteId);
+  }
+
+  // =====================
+  // DELETE HISTORIAL
+  // =====================
+  function deleteHistorial(id) {
+    if (!confirm('¿Eliminar este registro de historial?')) return;
+    Storage.delete(KEYS.HISTORIAL, id);
+    showToast('Historial eliminado', 'warning');
+    renderStats();
+    renderPacientesList();
+    if (selectedPacId) selectPacHistorial(selectedPacId);
+  }
+
+  // =====================
+  // VIEW DETAIL MODAL
+  // =====================
+  function viewDetail(id) {
+    const h = Storage.getOne(KEYS.HISTORIAL, id);
+    if (!h) return;
+    const meds = (h.medicamentos || []).filter(m => m.nombre);
+    document.getElementById('hist-detail-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div><div class="detail-label">Paciente</div><div class="detail-value">${h.pacienteNombre}</div></div>
+        <div><div class="detail-label">DNI</div><div class="detail-value">${h.pacienteDni}</div></div>
+        <div><div class="detail-label">Médico</div><div class="detail-value">${h.medico}</div></div>
+        <div><div class="detail-label">Especialidad</div><div class="detail-value">${h.especialidad}</div></div>
+        <div><div class="detail-label">Fecha de atención</div><div class="detail-value">📅 ${formatDate(h.fechaAtencion)}</div></div>
+        ${h.proximaCita ? `<div><div class="detail-label">Próxima cita</div><div class="detail-value" style="color:var(--green)">📅 ${formatDate(h.proximaCita)}</div></div>` : ''}
+      </div>
+      <hr class="divider"/>
+      <div class="mb-4"><div class="hist-section-label">🤒 Síntomas</div><p class="hist-section-value">${h.sintomas}</p></div>
+      <div class="mb-4"><div class="hist-section-label">🔬 Diagnóstico</div><p class="hist-section-value">${h.diagnostico}</p></div>
+      <div class="mb-4"><div class="hist-section-label">💉 Tratamiento</div><p class="hist-section-value">${h.tratamiento}</p></div>
+      ${meds.length > 0 ? `<div class="mb-4"><div class="hist-section-label">💊 Medicamentos</div>
+        <table style="width:100%;font-size:0.82rem;border-collapse:collapse;margin-top:6px">
+          <thead><tr><th style="text-align:left;padding:6px 10px;background:var(--gray-50);border-radius:6px 0 0 0">Nombre</th><th style="text-align:left;padding:6px 10px;background:var(--gray-50)">Dosis</th><th style="text-align:left;padding:6px 10px;background:var(--gray-50)">Frecuencia</th><th style="text-align:left;padding:6px 10px;background:var(--gray-50);border-radius:0 6px 0 0">Duración</th></tr></thead>
+          <tbody>${meds.map(m=>`<tr style="border-bottom:1px solid var(--gray-100)"><td style="padding:7px 10px">${m.nombre}</td><td style="padding:7px 10px">${m.dosis||'—'}</td><td style="padding:7px 10px">${m.frecuencia||'—'}</td><td style="padding:7px 10px">${m.duracion||'—'}</td></tr>`).join('')}</tbody>
+        </table></div>` : ''}
+      ${h.observaciones ? `<div><div class="hist-section-label">📝 Observaciones</div><p class="hist-section-value">${h.observaciones}</p></div>` : ''}
+    `;
+    openModal('modal-hist-detail');
+  }
+
+  // INIT
+  document.addEventListener('DOMContentLoaded', function() {
+    renderStats();
+    renderPacientesList();
+    const params = new URLSearchParams(window.location.search);
+    // Pre-select patient
+    const pacParam = params.get('pac');
+    if (pacParam) {
+      selectedPacId = pacParam;
+      selectPacHistorial(pacParam);
+      renderPacientesList();
+    }
+    // Pre-open with cita
+    const citaParam = params.get('cita');
+    if (citaParam) {
+      const cita = Storage.getOne(KEYS.CITAS, citaParam);
+      if (cita) {
+        openNewHistorial(cita.pacienteId);
+        setTimeout(() => {
+          const sel = document.getElementById('hist-cita');
+          sel.value = citaParam;
+          onCitaSelected();
+        }, 100);
+      }
+    }
+  });
+</script>
+</body>
+</html>
