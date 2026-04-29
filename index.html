@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clínica Salud+ — Inicio</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 60%, var(--teal) 100%);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem;
+      color: white;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '⚕';
+      position: absolute;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 8rem;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+    .hero-sub {
+      font-size: 1rem;
+      opacity: 0.8;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+    .hero-date {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .module-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .module-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .module-card.blue::before { background: linear-gradient(90deg, var(--blue), var(--teal)); }
+    .module-card.green::before { background: linear-gradient(90deg, var(--green), #10B981); }
+    .module-card.amber::before { background: linear-gradient(90deg, var(--amber), #F59E0B); }
+    .module-card.teal::before { background: linear-gradient(90deg, var(--teal), var(--blue-mid)); }
+
+    .module-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+      border-color: var(--blue-light);
+    }
+    .module-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .module-icon.blue { background: #DBEAFE; }
+    .module-icon.green { background: var(--green-light); }
+    .module-icon.amber { background: var(--amber-light); }
+    .module-icon.teal { background: #CCFBF1; }
+    .module-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .module-desc {
+      font-size: 0.82rem;
+      color: var(--gray-500);
+      line-height: 1.5;
+    }
+    .module-arrow {
+      position: absolute;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      color: var(--gray-300);
+      font-size: 1.1rem;
+      transition: var(--transition);
+    }
+    .module-card:hover .module-arrow { color: var(--blue-mid); transform: translateX(4px); }
+    .recent-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 700px) {
+      .hero-title { font-size: 1.8rem; }
+      .recent-section { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <div class="brand-icon">⚕</div>
+    <div>
+      <span class="brand-name">Clínica Salud+</span>
+      <span class="brand-sub">Sistema de Gestión</span>
+    </div>
+  </a>
+  <ul class="navbar-nav">
+    <li><a href="index.html"><span class="nav-icon">🏠</span> <span>Inicio</span></a></li>
+    <li><a href="pacientes.html"><span class="nav-icon">👤</span> <span>Pacientes</span></a></li>
+    <li><a href="citas.html"><span class="nav-icon">📅</span> <span>Citas</span></a></li>
+    <li><a href="historial.html"><span class="nav-icon">📋</span> <span>Historial</span></a></li>
+  </ul>
+</nav>
+
+<div class="page-wrapper">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-title">Sistema de Gestión<br>Clínica Salud+</div>
+    <p class="hero-sub">Administra pacientes, agenda médica e historial clínico de forma organizada, segura y eficiente.</p>
+    <p class="hero-date" id="current-date-display"></p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" id="stats-home"></div>
+
+  <!-- MODULES -->
+  <div class="page-header">
+    <div class="page-title" style="font-size:1.4rem;">Módulos del sistema</div>
+    <p class="page-subtitle">Selecciona un módulo para comenzar</p>
+  </div>
+
+  <div class="modules-grid">
+    <a href="pacientes.html" class="module-card blue">
+      <div class="module-icon blue">👤</div>
+      <div class="module-name">Registro de Pacientes</div>
+      <p class="module-desc">Registra, edita y consulta información completa de pacientes incluyendo alergias y antecedentes.</p>
+      <span class="module-arrow">→</span>
+    </a>
+    <a href="citas.html" class="module-card green">
+      <div class="module-icon green">📅</div>
+      <div class="module-name">Gestión de Citas</div>
+      <p class="module-desc">Agenda y gestiona citas médicas. Sala de espera en tiempo real con cambio de estados.</p>
+      <span class="module-arrow">→</span>
+    </a>
+    <a href="historial.html" class="module-card teal">
+      <div class="module-icon teal">📋</div>
+      <div class="module-name">Historial Clínico</div>
+      <p class="module-desc">Registra diagnósticos, tratamientos y medicamentos. Consulta el historial completo por paciente.</p>
+      <span class="module-arrow">→</span>
+    </a>
+  </div>
+
+  <!-- RECENT INFO -->
+  <div class="recent-section">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📅 Citas de hoy</span>
+        <a href="citas.html" class="btn btn-ghost btn-sm">Ver todas →</a>
+      </div>
+      <div class="card-body" id="today-citas">
+        <div class="empty-state"><span class="empty-icon">📅</span><p>Cargando...</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🕐 Sala de espera</span>
+        <a href="citas.html#sala" class="btn btn-ghost btn-sm">Ver sala →</a>
+      </div>
+      <div class="card-body" id="sala-espera-mini">
+        <div class="empty-state"><span class="empty-icon">🪑</span><p>Cargando...</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Fecha actual
+    const now = new Date();
+    document.getElementById('current-date-display').textContent =
+      now.toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Stats
+    const pacientes = Storage.get(KEYS.PACIENTES);
+    const citas = Storage.get(KEYS.CITAS);
+    const historial = Storage.get(KEYS.HISTORIAL);
+    const citasHoy = citas.filter(c => c.fecha === today());
+    const citasAtendidas = citas.filter(c => c.estado === 'atendida');
+
+    const statsData = [
+      { icon: '👤', label: 'Pacientes', value: pacientes.length, color: 'blue' },
+      { icon: '📅', label: 'Citas hoy', value: citasHoy.length, color: 'green' },
+      { icon: '✅', label: 'Atendidas', value: citasAtendidas.length, color: 'teal' },
+      { icon: '📋', label: 'Historiales', value: historial.length, color: 'amber' }
+    ];
+
+    document.getElementById('stats-home').innerHTML = statsData.map(s => `
+      <div class="stat-card">
+        <div class="stat-icon ${s.color}">${s.icon}</div>
+        <div class="stat-info">
+          <div class="stat-value">${s.value}</div>
+          <div class="stat-label">${s.label}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Citas hoy
+    const todayCont = document.getElementById('today-citas');
+    if (citasHoy.length === 0) {
+      todayCont.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span><p>No hay citas programadas para hoy</p></div>';
+    } else {
+      todayCont.innerHTML = citasHoy.slice(0, 4).map(c => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+          <div style="background:var(--navy);color:white;border-radius:8px;padding:4px 8px;font-size:0.75rem;font-weight:700;flex-shrink:0">${c.hora}</div>
+          <div style="flex:1">
+            <div style="font-size:0.85rem;font-weight:600;color:var(--gray-800)">${c.pacienteNombre}</div>
+            <div style="font-size:0.75rem;color:var(--gray-500)">${c.especialidad}</div>
+          </div>
+          ${estadoBadge(c.estado)}
+        </div>
+      `).join('') + (citasHoy.length > 4 ? `<p class="text-sm text-muted mt-2">+${citasHoy.length - 4} más</p>` : '');
+    }
+
+    // Sala espera
+    const en_espera = citas.filter(c => c.fecha === today() && c.estado === 'confirmada');
+    const salaCont = document.getElementById('sala-espera-mini');
+    if (en_espera.length === 0) {
+      salaCont.innerHTML = '<div class="empty-state"><span class="empty-icon">🪑</span><p>Sala de espera vacía</p></div>';
+    } else {
+      salaCont.innerHTML = en_espera.slice(0, 4).map((c, i) => `
+        <div class="queue-card" style="padding:10px 12px;margin-bottom:6px">
+          <div class="queue-num">${i + 1}</div>
+          <div class="queue-info">
+            <div class="queue-name">${c.pacienteNombre}</div>
+            <div class="queue-meta">🕐 ${c.hora} · ${c.medico}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  });
+</script>
+</body>
+</html>
